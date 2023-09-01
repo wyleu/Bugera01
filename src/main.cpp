@@ -4,7 +4,7 @@
 USBHID  HID;
 HIDKeyboard Keyboard(HID); // create a profile
 
-USBMIDI midi;
+USBMIDI MIDI;
 
 //  MIDI CC
 // 102 – 119	Undefined
@@ -18,7 +18,7 @@ void setup() {
   USBComposite.setManufacturerString("ZynthianIO");
   USBComposite.setProductString("Test Rig");
   HID.registerComponent();
-  midi.registerComponent();
+  MIDI.registerComponent();
   HID.setReportDescriptor(HID_KEYBOARD);
   USBComposite.begin();
 
@@ -42,32 +42,34 @@ boolean bluestate = false;
 boolean blackstate = false;
 boolean whitestate = false;
 
-unsigned long redwait = 0;
-unsigned long greenwait = 0;
-unsigned long yellowwait = 0;
-unsigned long bluewait = 0;
-unsigned long blackwait = 0;
-unsigned long whitewait = 0;
+uint32_t redwait = 0;
+uint32_t greenwait = 0;
+uint32_t yellowwait = 0;
+uint32_t bluewait = 0;
+uint32_t blackwait = 0;
+uint32_t whitewait = 0;
+
+uint32_t now; 
 
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
 
-boolean check(int colour, boolean state, int value, unsigned long *wait){
+boolean check(int colour, boolean state, int value, uint32_t *wait){
 
-    if ((millis() - *wait) > debounceDelay) {
+    if ((now - *wait) > debounceDelay) {
 
       if (digitalRead(colour) == LOW and state == false) {
         state = true;
-        midi.sendControlChange(15, value, 127);
+        MIDI.sendControlChange(15, value, 127);
         digitalWrite(ledPin, LOW);
-        *wait = millis();
+        *wait = now;
       }
 
       if (digitalRead(colour) == HIGH and state == true) {
         state = false;
-        midi.sendControlChange(15, value, 0);
+        MIDI.sendControlChange(15, value, 0);
         digitalWrite(ledPin, HIGH);
-        *wait = millis();
+        *wait = now;
       }
     }
 
@@ -76,6 +78,8 @@ boolean check(int colour, boolean state, int value, unsigned long *wait){
 
 
 void loop() {
+
+  now = millis();
 
   redstate = check(PA9, redstate, 102, &redwait);
   greenstate = check(PA8, greenstate, 103, &greenwait);
