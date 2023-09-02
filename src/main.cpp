@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <USBComposite.h>
+#include <FastLED.h>
 
 USBHID  HID;
 HIDKeyboard Keyboard(HID); // create a profile
@@ -9,7 +10,11 @@ USBMIDI MIDI;
 //  MIDI CC
 // 102 – 119	Undefined
 
+#define NUM_LEDS 20
+#define DATA_PIN PA3
 #define ledPin PC13 //13
+
+CRGB leds[NUM_LEDS];
 
 void setup() {
   USBComposite.clear();
@@ -32,6 +37,8 @@ void setup() {
   pinMode(PA8, INPUT_PULLUP);
   
   while (!USBComposite);
+  FastLED.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS); 
+  // FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
 
 }
 
@@ -60,14 +67,14 @@ boolean check(int colour, boolean state, int value, uint32_t *wait){
 
       if (digitalRead(colour) == LOW and state == false) {
         state = true;
-        MIDI.sendControlChange(15, value, 127);
+        MIDI.sendControlChange(12, value, 127);
         digitalWrite(ledPin, LOW);
         *wait = now;
       }
 
       if (digitalRead(colour) == HIGH and state == true) {
         state = false;
-        MIDI.sendControlChange(15, value, 0);
+        MIDI.sendControlChange(12, value, 0);
         digitalWrite(ledPin, HIGH);
         *wait = now;
       }
@@ -92,4 +99,16 @@ void loop() {
   // delay(1000);
   // digitalWrite(ledPin, LOW);
   // delay(1000);
+  // leds[0] = CRGB::White; FastLED.show(); delay(30);
+  // leds[0] = CRGB::Black; FastLED.show(); delay(30);
 }
+
+
+// #include <FastLED.h>
+// #define NUM_LEDS 60
+// CRGB leds[NUM_LEDS];
+// void setup() { FastLED.addLeds<NEOPIXEL, 6>(leds, NUM_LEDS); }
+// void loop() {
+// 	leds[0] = CRGB::White; FastLED.show(); delay(30);
+// 	leds[0] = CRGB::Black; FastLED.show(); delay(30);
+// }
