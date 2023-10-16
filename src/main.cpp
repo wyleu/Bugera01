@@ -14,6 +14,14 @@ USBMIDI MIDI;
 #define NUM_LEDS 20
 #define DATA_PIN PA3
 #define ledPin PC13 //13
+#define DEBUG_FLASH false
+
+#define MODE_ON_PRESS_OFF  0      //  Initially OFF, LED OFF. Sends MIDI ON, LED ON on press, Sends MIDI OFF, LED OFF on release
+#define MODE_OFF_PRESS_ON  1      //  Initially ON, LED ON. Sends MIDI OFF, LED OFF on press, Sends MIDI ON, LED ON on release 
+#define MODE_ON_PRESS  2          //  Initially OFF, LED OFF. Sends MIDI ON, LED ON on press. No action on release
+#define MODE_OFF_PRESS  3         //  Initially ON, LED ON, Send MIDI OFF, LED OFF on Press. No action on release
+#define TOGGLE_ON  4              //  Initially OFF, LED OFF, Send MIDI ON, LED ON on Press Toggle Send MIDI ON, LED ON and Send MIDI OFF, LED OFF
+#define TOGGLE_OFF  5             //  Initially ON, LED ON, Send MIDI ON, LED ON on Press Toggle Send MIDI OFF, LED OFF and Send MIDI ON, LED ON
 
 int no_of_leds = 60;
 
@@ -52,23 +60,26 @@ void setup() {
     char colour[20];          // Wire Colour Name
     char alt_colour[20];      // Button Colour Name
     int pin;                  // pin connected to Button
-    int midi;                // Midi value sent on press
+    uint32_t mode;            // Button Mode
+    int midi;                 // Midi value sent on press
     boolean state;            // Button current state
     uint32_t wait;            // Button time pressed
     uint32_t led1;            // LED pos for first led
     uint32_t led2;            // LED pos for second led
+    uint32_t led3;            // LED pos for third led
+    uint32_t led4;            // LED pos for fourth led
     uint32_t r;               // LED Red value
     uint32_t g;               // LED Green value
     uint32_t b;               // LED Blue value
 };
 
 
-struct Button red_button = {"Red", "Red", PA9, 102, false, 0, 1, 2, 255, 0, 0};
-struct Button green_button = {"Green", "Green", PA8,  103, false, 0, 11, 12, 0, 255, 0};
-struct Button yellow_button = {"Yellow"," Yellow", PB15,  104, false, 0, 21, 22, 255, 100, 0};
-struct Button blue_button = {"Blue", "Blue", PB14, 105, false, 0, 31, 32, 0, 0, 255};
-struct Button black_button = {"Black", "Purple", PB13, 106, false, 0, 41, 42, 255, 0, 255};
-struct Button white_button = {"White", "Grey", PB12, 107, false, 0, 51, 52, 255, 255, 255};
+struct Button red_button = {"Red", "Red", PA9, MODE_ON_PRESS_OFF, 102, false, 0, 0, 1, 2, 3, 255, 0, 0};
+struct Button green_button = {"Green", "Green", PA8, MODE_ON_PRESS_OFF, 103, false, 0, 9, 10, 11, 12, 0, 255, 0};
+struct Button yellow_button = {"Yellow"," Yellow", PB15, MODE_ON_PRESS_OFF,  104, false, 0, 19, 20, 21, 22,  255, 100, 0};
+struct Button blue_button = {"Blue", "Blue", PB14, MODE_ON_PRESS_OFF, 105, false, 0, 29, 30, 31, 32, 0, 0, 255};
+struct Button black_button = {"Black", "Purple", PB13, MODE_ON_PRESS_OFF, 106, false, 0, 39, 40, 41, 42, 255, 0, 255};
+struct Button white_button = {"White", "Grey", PB12, MODE_ON_PRESS_OFF, 107, false, 0, 49, 50, 51, 52, 255, 255, 255};
 
 struct Voltage {
     char colour[20];
@@ -95,6 +106,8 @@ boolean button_check(Button &button){
 
           ws2812_set(button.led1, button.r, button.g, button.b);
           ws2812_set(button.led2, button.r, button.g, button.b);
+          ws2812_set(button.led3, button.r, button.g, button.b);
+          ws2812_set(button.led4, button.r, button.g, button.b);
           ws2812_refresh();
 
           digitalWrite(ledPin, LOW);
@@ -107,6 +120,8 @@ boolean button_check(Button &button){
 
           ws2812_set(button.led1, 0, 0, 0);
           ws2812_set(button.led2, 0, 0, 0);
+          ws2812_set(button.led3, 0, 0, 0);
+          ws2812_set(button.led4, 0, 0, 0);
           ws2812_refresh();
 
           digitalWrite(ledPin, HIGH);
@@ -141,9 +156,11 @@ void loop() {
   voltage_check(psu_voltage);
   voltage_check(switch_voltage);
 
-  digitalWrite(ledPin, HIGH);
-  delay(100);
-  digitalWrite(ledPin, LOW);
-  delay(100);
-  //MIDI.sendControlChange(13, 110, 68);
+  if(DEBUG_FLASH == true){
+    digitalWrite(ledPin, HIGH);
+    delay(100);
+    digitalWrite(ledPin, LOW);
+    delay(100);
+    //MIDI.sendControlChange(13, 110, 68);
+  }
 }
