@@ -65,7 +65,7 @@ void setup() {
     uint32_t mode;            // Button Mode
     int channel;              // Midi channel  for button
     int midi;                 // Midi value sent on press
-    boolean state;            // Button current state
+    bool state;               // Button current state
     uint32_t wait;            // Button time pressed
     uint32_t led1;            // LED pos for first led
     uint32_t led2;            // LED pos for second led
@@ -101,7 +101,7 @@ unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
 
 
-boolean led_on(Button &button ){
+bool led_on(Button &button ){
   //  Turn on the LED 
       ws2812_set(button.led1, button.r, button.g, button.b);
       ws2812_set(button.led2, button.r, button.g, button.b);
@@ -113,7 +113,7 @@ boolean led_on(Button &button ){
       
 }
 
-boolean led_off(Button &button ){
+bool led_off(Button &button ){
   //  Turn off the LED 
       ws2812_set(button.led1, 0, 0, 0);
       ws2812_set(button.led2, 0, 0, 0);
@@ -124,7 +124,7 @@ boolean led_off(Button &button ){
       return false;
 }
 
-boolean button_check(Button &button){
+bool button_check(Button &button){
     if ((now - button.wait) > debounceDelay) {
         if (digitalRead(button.pin) == LOW and button.state == false) {
 
