@@ -14,9 +14,12 @@ USBMIDI MIDI;
 #define NUM_LEDS 20
 #define DATA_PIN PA3
 #define LED_PIN PC13 //13
+
 #define DEBUG_FLASH false
+#define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
+
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
-#define DEFAULT_MIDI_CHANNEL 12  //  Default MIDI channel for startup  (Channel 13) 
+#define DEFAULT_MIDI_CHANNEL 12   //  Default MIDI channel for startup  (Channel 13) 
 
 #define MODE_ON_PRESS_OFF  0      //  Initially OFF, LED OFF. Sends MIDI ON, LED ON on press, Sends MIDI OFF, LED OFF on release
 #define MODE_OFF_PRESS_ON  1      //  Initially ON, LED ON. Sends MIDI OFF, LED OFF on press, Sends MIDI ON, LED ON on release 
@@ -28,7 +31,28 @@ USBMIDI MIDI;
 int no_of_leds = 60;
 
 
+#define FOOT_RED PA9
+#define FOOT_GREEN PA8
+#define FOOT_YELLOW PB15
+#define FOOT_BLUE PB14
+#define FOOT_PURPLE PB13
+#define FOOT_WHITE PB12
+
+#define PWM_LED_RED PB8           // 680R
+#define PWM_LED_GREEN PB7         // 390R
+#define PWM_LED_BLUE PB6         // 270R
+
+#define VOLTAGE_PSU PA0 
+#define VOLTAGE_SWITCH PA1
+
+#define ENCODER_A PB3
+#define ENCODER_B PB4
+#define ENCODER_SW PB5
+
+
 void setup() {
+
+  Serial.begin(9600);
   USBComposite.clear();
   USBComposite.setProductId(0x0067);
   USBComposite.setVendorId(0x1eaa);
@@ -41,19 +65,25 @@ void setup() {
 
   pinMode(LED_PIN, OUTPUT);
 
-  pinMode(PA0, INPUT_ANALOG);     // PSU Voltage
-  pinMode(PA1, INPUT_ANALOG);     // PSU Voltage
+  pinMode(VOLTAGE_PSU, INPUT_ANALOG);         // PSU Voltage
+  pinMode(VOLTAGE_SWITCH, INPUT_ANALOG);      // PSU Voltage
 
-  pinMode(PA8, INPUT_PULLUP);      // Bugera Switch 2 Green
-  pinMode(PA9, INPUT_PULLUP);      // Bugera Switch 1 Red  
+  pinMode(ENCODER_A, INPUT_PULLUP);           // Encoder A
+  pinMode(ENCODER_B, INPUT_PULLUP);           // Encoder B
+  pinMode(ENCODER_SW, INPUT_PULLDOWN);        // Encoder Sw
+  pinMode(PWM_LED_BLUE, OUTPUT);                 // LED Blue
+  pinMode(PWM_LED_GREEN, OUTPUT);                // LED Green
+  pinMode(PWM_LED_RED, OUTPUT);                  // LED Red
 
-  pinMode(PB12, INPUT_PULLUP);     // Bugera Switch 6 White/Grey
-  pinMode(PB13, INPUT_PULLUP);     // Bugera Switch 5 Purple/Black
-  pinMode(PB14, INPUT_PULLUP);     // Bugera Switch 4 Blue
-  pinMode(PB15, INPUT_PULLUP);     // Bugera Switch 3 Yellow
+
+  pinMode(FOOT_GREEN, INPUT_PULLUP);      // Bugera Switch 2 Green
+  pinMode(FOOT_RED, INPUT_PULLUP);        // Bugera Switch 1 Red  
+  pinMode(FOOT_WHITE, INPUT_PULLUP);      // Bugera Switch 6 White/Grey
+  pinMode(FOOT_PURPLE, INPUT_PULLUP);     // Bugera Switch 5 Purple/Black
+  pinMode(FOOT_BLUE, INPUT_PULLUP);       // Bugera Switch 4 Blue
+  pinMode(FOOT_YELLOW, INPUT_PULLUP);     // Bugera Switch 3 Yellow
 
 
-  
   while (!USBComposite);
   ws2812_init(1, no_of_leds);
 }
@@ -139,6 +169,11 @@ bool button_check(Button &button){
           ws2812_set(button.led4, button.r, button.g, button.b);
           ws2812_refresh();
 
+          analogWrite(PWM_LED_RED, 255 - button.r);        
+          analogWrite(PWM_LED_GREEN, 255 - button.g);  
+          analogWrite(PWM_LED_BLUE, 255 - button.b);         
+
+
           digitalWrite(LED_PIN, LOW);
           button.wait = now;
         }
@@ -154,6 +189,10 @@ bool button_check(Button &button){
           ws2812_set(button.led3, 0, 0, 0);
           ws2812_set(button.led4, 0, 0, 0);
           ws2812_refresh();
+
+          analogWrite(PWM_LED_RED, 255);        
+          analogWrite(PWM_LED_GREEN, 255);  
+          analogWrite(PWM_LED_BLUE, 255);  
 
           digitalWrite(LED_PIN, HIGH);
           button.wait = now;
@@ -184,8 +223,11 @@ void loop() {
   button_check(black_button);
   button_check(white_button);
 
-  voltage_check(psu_voltage);
-  voltage_check(switch_voltage);
+
+  if (VOLTS_PSU_MEASURE == true){
+    voltage_check(psu_voltage);
+    voltage_check(switch_voltage);
+  }
 
   if(DEBUG_FLASH == true){
     digitalWrite(LED_PIN, HIGH);
