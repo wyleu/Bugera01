@@ -108,6 +108,9 @@ boolean led_on(Button &button ){
       ws2812_set(button.led3, button.r, button.g, button.b);
       ws2812_set(button.led4, button.r, button.g, button.b);
       ws2812_refresh();
+
+      return true;
+      
 }
 
 boolean led_off(Button &button ){
@@ -117,6 +120,8 @@ boolean led_off(Button &button ){
       ws2812_set(button.led3, 0, 0, 0);
       ws2812_set(button.led4, 0, 0, 0);
       ws2812_refresh();
+
+      return false;
 }
 
 boolean button_check(Button &button){
