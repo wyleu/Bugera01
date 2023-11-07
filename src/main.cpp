@@ -13,8 +13,10 @@ USBMIDI MIDI;
 
 #define NUM_LEDS 20
 #define DATA_PIN PA3
-#define ledPin PC13 //13
+#define LED_PIN PC13 //13
 #define DEBUG_FLASH false
+#define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
+#define DEFAULT_MIDI_CHANNEL 12  //  Default MIDI channel for startup  (Channel 13) 
 
 #define MODE_ON_PRESS_OFF  0      //  Initially OFF, LED OFF. Sends MIDI ON, LED ON on press, Sends MIDI OFF, LED OFF on release
 #define MODE_OFF_PRESS_ON  1      //  Initially ON, LED ON. Sends MIDI OFF, LED OFF on press, Sends MIDI ON, LED ON on release 
@@ -37,7 +39,7 @@ void setup() {
   HID.setReportDescriptor(HID_KEYBOARD);
   USBComposite.begin();
 
-  pinMode(ledPin, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 
   pinMode(PA0, INPUT_ANALOG);     // PSU Voltage
   pinMode(PA1, INPUT_ANALOG);     // PSU Voltage
@@ -61,6 +63,7 @@ void setup() {
     char alt_colour[20];      // Button Colour Name
     int pin;                  // pin connected to Button
     uint32_t mode;            // Button Mode
+    int channel;              // Midi channel  for button
     int midi;                 // Midi value sent on press
     boolean state;            // Button current state
     uint32_t wait;            // Button time pressed
@@ -74,12 +77,12 @@ void setup() {
 };
 
 
-struct Button red_button = {"Red", "Red", PA9, MODE_ON_PRESS_OFF, 102, false, 0, 0, 1, 2, 3, 255, 0, 0};
-struct Button green_button = {"Green", "Green", PA8, MODE_ON_PRESS_OFF, 103, false, 0, 9, 10, 11, 12, 0, 255, 0};
-struct Button yellow_button = {"Yellow"," Yellow", PB15, MODE_ON_PRESS_OFF,  104, false, 0, 19, 20, 21, 22,  255, 100, 0};
-struct Button blue_button = {"Blue", "Blue", PB14, MODE_ON_PRESS_OFF, 105, false, 0, 29, 30, 31, 32, 0, 0, 255};
-struct Button black_button = {"Black", "Purple", PB13, MODE_ON_PRESS_OFF, 106, false, 0, 39, 40, 41, 42, 255, 0, 255};
-struct Button white_button = {"White", "Grey", PB12, MODE_ON_PRESS_OFF, 107, false, 0, 49, 50, 51, 52, 255, 255, 255};
+struct Button red_button = {"Red", "Red", PA9, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 102, false, 0, 0, 1, 2, 3, 255, 0, 0};
+struct Button green_button = {"Green", "Green", PA8, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 103, false, 0, 9, 10, 11, 12, 0, 255, 0};
+struct Button yellow_button = {"Yellow"," Yellow", PB15, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 104, false, 0, 19, 20, 21, 22,  255, 100, 0};
+struct Button blue_button = {"Blue", "Blue", PB14, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 105, false, 0, 29, 30, 31, 32, 0, 0, 255};
+struct Button black_button = {"Black", "Purple", PB13, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 106, false, 0, 39, 40, 41, 42, 255, 0, 255};
+struct Button white_button = {"White", "Grey", PB12, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 107, false, 0, 49, 50, 51, 52, 255, 255, 255};
 
 struct Voltage {
     char colour[20];
@@ -97,6 +100,25 @@ uint32_t now;
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
 
+
+boolean led_on(Button &button ){
+  //  Turn on the LED 
+      ws2812_set(button.led1, button.r, button.g, button.b);
+      ws2812_set(button.led2, button.r, button.g, button.b);
+      ws2812_set(button.led3, button.r, button.g, button.b);
+      ws2812_set(button.led4, button.r, button.g, button.b);
+      ws2812_refresh();
+}
+
+boolean led_off(Button &button ){
+  //  Turn off the LED 
+      ws2812_set(button.led1, 0, 0, 0);
+      ws2812_set(button.led2, 0, 0, 0);
+      ws2812_set(button.led3, 0, 0, 0);
+      ws2812_set(button.led4, 0, 0, 0);
+      ws2812_refresh();
+}
+
 boolean button_check(Button &button){
     if ((now - button.wait) > debounceDelay) {
         if (digitalRead(button.pin) == LOW and button.state == false) {
@@ -104,13 +126,15 @@ boolean button_check(Button &button){
           button.state = true;
           MIDI.sendControlChange(12, button.midi, 127);
 
+          //led_on(button);
+
           ws2812_set(button.led1, button.r, button.g, button.b);
           ws2812_set(button.led2, button.r, button.g, button.b);
           ws2812_set(button.led3, button.r, button.g, button.b);
           ws2812_set(button.led4, button.r, button.g, button.b);
           ws2812_refresh();
 
-          digitalWrite(ledPin, LOW);
+          digitalWrite(LED_PIN, LOW);
           button.wait = now;
         }
         if (digitalRead(button.pin) == HIGH and button.state == true) {
@@ -118,13 +142,15 @@ boolean button_check(Button &button){
           button.state = false;
           MIDI.sendControlChange(12, button.midi, 0);
 
+          //led_off(button);
+
           ws2812_set(button.led1, 0, 0, 0);
           ws2812_set(button.led2, 0, 0, 0);
           ws2812_set(button.led3, 0, 0, 0);
           ws2812_set(button.led4, 0, 0, 0);
           ws2812_refresh();
 
-          digitalWrite(ledPin, HIGH);
+          digitalWrite(LED_PIN, HIGH);
           button.wait = now;
         }
     }
@@ -157,9 +183,9 @@ void loop() {
   voltage_check(switch_voltage);
 
   if(DEBUG_FLASH == true){
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(LED_PIN, HIGH);
     delay(100);
-    digitalWrite(ledPin, LOW);
+    digitalWrite(LED_PIN, LOW);
     delay(100);
     //MIDI.sendControlChange(13, 110, 68);
   }
