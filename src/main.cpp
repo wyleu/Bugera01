@@ -17,6 +17,7 @@ USBMIDI MIDI;
 
 #define DEBUG_FLASH false
 #define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
+#define JABBER       true         // MIDI Jabber for fault finding
 
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
 #define DEFAULT_MIDI_CHANNEL 12   //  Default MIDI channel for startup  (Channel 13) 
@@ -198,9 +199,6 @@ bool button_check(Button &button){
           button.wait = now;
         }
     }
-
-    return button.state;
-
 }
 
 int voltage_check(Voltage &voltage){
@@ -234,6 +232,9 @@ void loop() {
     delay(100);
     digitalWrite(LED_PIN, LOW);
     delay(100);
-    //MIDI.sendControlChange(13, 110, 68);
+  }
+
+  if(JABBER == true){
+    MIDI.sendControlChange(13, 110, 68);
   }
 }
