@@ -15,7 +15,7 @@ USBMIDI MIDI;
 #define DATA_PIN PA3
 #define LED_PIN PC13 //13
 
-#define DEBUG_FLASH false
+#define DEBUG_FLASH true
 #define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
 #define JABBER       true         // MIDI Jabber for fault finding
 
@@ -173,10 +173,7 @@ bool button_check(Button &button){
           analogWrite(PWM_LED_RED, 255 - button.r);        
           analogWrite(PWM_LED_GREEN, 255 - button.g);  
           analogWrite(PWM_LED_BLUE, 255 - button.b);         
-
-
-          digitalWrite(LED_PIN, LOW);
-          button.wait = now;
+          
         }
         if (digitalRead(button.pin) == HIGH and button.state == true) {
           
@@ -195,9 +192,9 @@ bool button_check(Button &button){
           analogWrite(PWM_LED_GREEN, 255);  
           analogWrite(PWM_LED_BLUE, 255);  
 
-          digitalWrite(LED_PIN, HIGH);
-          button.wait = now;
         }
+
+        button.wait = now;
     }
 }
 
