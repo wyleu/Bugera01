@@ -17,7 +17,7 @@ USBMIDI MIDI;
 
 #define DEBUG_FLASH true
 #define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
-#define JABBER       true         // MIDI Jabber for fault finding
+#define JABBER true              // MIDI Jabber for fault finding
 
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
 #define DEFAULT_MIDI_CHANNEL 12   //  Default MIDI channel for startup  (Channel 13) 
@@ -41,7 +41,7 @@ int no_of_leds = 60;
 
 #define PWM_LED_RED PB8           // 680R
 #define PWM_LED_GREEN PB7         // 390R
-#define PWM_LED_BLUE PB6         // 270R
+#define PWM_LED_BLUE PB6          // 270R
 
 #define VOLTAGE_PSU PA0 
 #define VOLTAGE_SWITCH PA1
@@ -195,7 +195,9 @@ bool button_check(Button &button){
         }
 
         button.wait = now;
+        return true;
     }
+  return false;
 }
 
 int voltage_check(Voltage &voltage){
@@ -210,6 +212,7 @@ int voltage_check(Voltage &voltage){
 void loop() {
 
   now = millis();
+  Serial.println("Hello World");
 
   button_check(red_button);
   button_check(green_button);
@@ -224,12 +227,12 @@ void loop() {
     voltage_check(switch_voltage);
   }
 
-  if(DEBUG_FLASH == true){
+//  if(DEBUG_FLASH == true){
     digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(100);
-  }
+    delay(20000);
+    digitalWrite(LED_PIN, HIGH);
+    delay(1000);
+//  }
 
   if(JABBER == true){
     MIDI.sendControlChange(13, 110, 68);
