@@ -229,9 +229,9 @@ void loop() {
 
 //  if(DEBUG_FLASH == true){
     digitalWrite(LED_PIN, HIGH);
-    delay(20000);
-    digitalWrite(LED_PIN, HIGH);
-    delay(1000);
+    delay(200);
+    digitalWrite(LED_PIN, LOW);
+    delay(100);
 //  }
 
   if(JABBER == true){
