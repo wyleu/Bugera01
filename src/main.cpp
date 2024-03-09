@@ -17,7 +17,8 @@ USBMIDI MIDI;
 
 #define DEBUG_FLASH true
 #define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
-#define JABBER true              // MIDI Jabber for fault finding
+#define JABBER true               // MIDI Jabber for fault finding
+#define LED_TEST true             // Cycle the LED's
 
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
 #define DEFAULT_MIDI_CHANNEL 12   //  Default MIDI channel for startup  (Channel 13) 
@@ -236,5 +237,14 @@ void loop() {
 
   if(JABBER == true){
     MIDI.sendControlChange(13, 110, 68);
+  }
+  if(LED_TEST == true){
+    int i;
+    for (i = 0 ; i < 53 ; i++) {
+    
+      ws2812_set(i, 255, 0, 0);
+      ws2812_refresh();
+      delay(100);
+    }  
   }
 }
