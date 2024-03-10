@@ -15,10 +15,10 @@ USBMIDI MIDI;
 #define DATA_PIN PA3
 #define LED_PIN PC13 //13
 
-#define DEBUG_FLASH true
+#define DEBUG_FLASH false
 #define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
-#define JABBER true               // MIDI Jabber for fault finding
-#define LED_TEST true             // Cycle the LED's
+#define JABBER false               // MIDI Jabber for fault finding
+#define LED_TEST true             // Cycle the LED's on startup
 
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
 #define DEFAULT_MIDI_CHANNEL 12   //  Default MIDI channel for startup  (Channel 13) 
@@ -132,6 +132,8 @@ uint32_t now;
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
 
+int led_test = LED_TEST;
+
 
 bool led_on(Button &button ){
   //  Turn on the LED 
@@ -228,23 +230,29 @@ void loop() {
     voltage_check(switch_voltage);
   }
 
-//  if(DEBUG_FLASH == true){
+  if(DEBUG_FLASH == true){
     digitalWrite(LED_PIN, HIGH);
     delay(200);
     digitalWrite(LED_PIN, LOW);
     delay(100);
-//  }
+  }
 
   if(JABBER == true){
     MIDI.sendControlChange(13, 110, 68);
   }
-  if(LED_TEST == true){
+  if(led_test == true){
     int i;
     for (i = 0 ; i < 53 ; i++) {
     
-      ws2812_set(i, 255, 0, 0);
+      ws2812_set(i, 255, 255, 255);
       ws2812_refresh();
       delay(100);
     }  
+    delay(1000);
+    led_test = false;
+    for (i = 0 ; i < 53 ; i++) {
+      ws2812_set(i, 0, 0, 0);
+      ws2812_refresh();
+    }
   }
 }
