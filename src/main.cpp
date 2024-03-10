@@ -16,9 +16,9 @@ USBMIDI MIDI;
 #define LED_PIN PC13 //13
 
 #define DEBUG_FLASH false
-#define VOLTS_PSU_MEASURE false   // Measure PSU Voltage
+#define VOLTS_PSU_MEASURE true   // Measure PSU Voltage
 #define JABBER false               // MIDI Jabber for fault finding
-#define LED_TEST true             // Cycle the LED's on startup
+#define LED_TEST true             // Cycle the LED's on startupi
 
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
 #define DEFAULT_MIDI_CHANNEL 12   //  Default MIDI channel for startup  (Channel 13) 
@@ -44,8 +44,11 @@ int no_of_leds = 60;
 #define PWM_LED_GREEN PB7         // 390R
 #define PWM_LED_BLUE PB6          // 270R
 
-#define VOLTAGE_PSU PA0 
-#define VOLTAGE_SWITCH PA1
+
+#define CONTROL_VOLTAGE_1   PA0
+#define CONTROL_VOLTAGE_2   PA1
+#define VOLTAGE_PSU         PA2 
+#define VOLTAGE_SWITCH      PA3
 
 #define ENCODER_A PB3
 #define ENCODER_B PB4
@@ -124,8 +127,10 @@ struct Voltage {
     int value;                // Current Value
 };
 
-struct Voltage psu_voltage = {"PSU_Voltage", "PSU_Voltage", PA0 , 108, 0};
-struct Voltage switch_voltage = {"SW_Voltage", "SW_Voltage", PA1 , 109, 0};
+struct Voltage cv1_voltage = {"CV1_Voltage", "PSU_Voltage", PA0 , 108, 0};
+struct Voltage cv2_voltage = {"CV2_Voltage", "SW_Voltage", PA1 , 109, 0};
+struct Voltage psu_voltage = {"PSU_Voltage", "PSU_Voltage", PA2 , 110, 0};
+struct Voltage switch_voltage = {"SW_Voltage", "SW_Voltage", PA3 , 111, 0};
 
 uint32_t now; 
 
@@ -226,8 +231,10 @@ void loop() {
 
 
   if (VOLTS_PSU_MEASURE == true){
-    voltage_check(psu_voltage);
-    voltage_check(switch_voltage);
+    //voltage_check(cv1_voltage);
+    voltage_check(cv2_voltage);
+    //voltage_check(psu_voltage);
+    //voltage_check(switch_voltage);
   }
 
   if(DEBUG_FLASH == true){
