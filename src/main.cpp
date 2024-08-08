@@ -5,6 +5,7 @@
 
 USBHID  HID;
 HIDKeyboard Keyboard(HID); // create a profile
+USBCompositeSerial usb_serial;
 
 USBMIDI MIDI;
 
@@ -16,8 +17,9 @@ USBMIDI MIDI;
 #define LED_PIN PC13 //13
 
 #define DEBUG_FLASH false
-#define VOLTS_PSU_MEASURE true   // Measure PSU Voltage
-#define JABBER false               // MIDI Jabber for fault finding
+#define VOLTS_PSU_MEASURE true    // Measure PSU Voltage
+#define JABBER false              // MIDI Jabber for fault finding
+#define SERIAL_OUT false           // Enable USB Serial out 
 #define LED_TEST true             // Cycle the LED's on startupi
 
 #define LED_ON_PAUSE 200          //  Length of on LED Display on LEADING edge trigger.
@@ -63,10 +65,12 @@ void setup() {
   USBComposite.setVendorId(0x1eaa);
   USBComposite.setManufacturerString("ZynthianIO");
   USBComposite.setProductString("Wyleu Bugera Pedal");
+  usb_serial.registerComponent();
   HID.registerComponent();
   MIDI.registerComponent();
   HID.setReportDescriptor(HID_KEYBOARD);
   USBComposite.begin();
+
 
   pinMode(LED_PIN, OUTPUT);
 
@@ -90,7 +94,7 @@ void setup() {
 
 
   while (!USBComposite);
-  ws2812_init(1, no_of_leds);
+    ws2812_init(1, no_of_leds);
 }
 
  struct Button {
@@ -187,6 +191,8 @@ bool button_check(Button &button){
           
           button.state = false;
           MIDI.sendControlChange(12, button.midi, 0);
+          Serial.print("Pressed ");
+          Serial.println(button.midi);
 
           //led_off(button);
 
@@ -220,7 +226,8 @@ int voltage_check(Voltage &voltage){
 void loop() {
 
   now = millis();
-  Serial.println("Hello World");
+  // usb_serial.println("Serial LOUD Noise !");
+  // Serial.println("Hello World");
 
   button_check(red_button);
   button_check(green_button);
@@ -244,6 +251,10 @@ void loop() {
     delay(100);
   }
 
+  if(SERIAL_OUT == true){
+    Serial.println("Serial Noise !");
+  }
+
   if(JABBER == true){
     MIDI.sendControlChange(13, 110, 68);
   }
@@ -253,9 +264,9 @@ void loop() {
     
       ws2812_set(i, 255, 255, 255);
       ws2812_refresh();
-      delay(100);
+      delay(30);
     }  
-    delay(1000);
+    delay(300);
     led_test = false;
     for (i = 0 ; i < 53 ; i++) {
       ws2812_set(i, 0, 0, 0);
