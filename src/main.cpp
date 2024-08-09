@@ -5,7 +5,7 @@
 
 USBHID  HID;
 HIDKeyboard Keyboard(HID); // create a profile
-USBCompositeSerial usb_serial;
+// USBCompositeSerial usb_serial;
 
 USBMIDI MIDI;
 
@@ -65,7 +65,7 @@ void setup() {
   USBComposite.setVendorId(0x1eaa);
   USBComposite.setManufacturerString("ZynthianIO");
   USBComposite.setProductString("Wyleu Bugera Pedal");
-  usb_serial.registerComponent();
+  // usb_serial.registerComponent();
   HID.registerComponent();
   MIDI.registerComponent();
   HID.setReportDescriptor(HID_KEYBOARD);
@@ -92,9 +92,7 @@ void setup() {
   pinMode(FOOT_BLUE, INPUT_PULLUP);       // Bugera Switch 4 Blue
   pinMode(FOOT_YELLOW, INPUT_PULLUP);     // Bugera Switch 3 Yellow
 
-
-  while (!USBComposite);
-    ws2812_init(1, no_of_leds);
+  ws2812_init(1, no_of_leds);
 }
 
  struct Button {
