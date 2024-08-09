@@ -7,3 +7,4 @@ Bugera PCB Size 365mm * 40mm
 
 Front screws at 70mm distances 5mm * 5mm 
 
+Switching to USB programming using.USB Maple Bootloader (DFU).
