@@ -2,12 +2,8 @@
 #include <USBComposite.h>
 #include "ws2812.h"
 
-
-USBHID  HID;
-HIDKeyboard Keyboard(HID); // create a profile
-// USBCompositeSerial usb_serial;
-
-USBMIDI MIDI;
+USBMIDI usb_midi;
+USBCompositeSerial usb_serial;
 
 //  MIDI CC
 // 102 – 119	Undefined
@@ -59,16 +55,14 @@ int no_of_leds = 60;
 
 void setup() {
 
-  Serial.begin(9600);
   USBComposite.clear();
-  USBComposite.setProductId(0x0067);
+  USBComposite.setProductId(0x0068);
   USBComposite.setVendorId(0x1eaa);
   USBComposite.setManufacturerString("ZynthianIO");
   USBComposite.setProductString("Wyleu Bugera Pedal");
-  // usb_serial.registerComponent();
-  HID.registerComponent();
-  MIDI.registerComponent();
-  HID.setReportDescriptor(HID_KEYBOARD);
+  usb_midi.registerComponent();
+  usb_serial.registerComponent();
+  
   USBComposite.begin();
 
 
@@ -170,7 +164,7 @@ bool button_check(Button &button){
         if (digitalRead(button.pin) == LOW and button.state == false) {
 
           button.state = true;
-          MIDI.sendControlChange(12, button.midi, 127);
+          usb_midi.sendControlChange(12, button.midi, 127);
 
           //led_on(button);
 
@@ -188,9 +182,9 @@ bool button_check(Button &button){
         if (digitalRead(button.pin) == HIGH and button.state == true) {
           
           button.state = false;
-          MIDI.sendControlChange(12, button.midi, 0);
-          Serial.print("Pressed ");
-          Serial.println(button.midi);
+          usb_midi.sendControlChange(12, button.midi, 0);
+          usb_serial.print("Pressed ");
+          usb_serial.println(button.midi);
 
           //led_off(button);
 
@@ -216,7 +210,7 @@ int voltage_check(Voltage &voltage){
 
     int val = analogRead(voltage.pin);
     val = map(val, 0, 4096, 0, 127);
-    MIDI.sendControlChange(12, voltage.midi, val);
+    usb_midi.sendControlChange(12, voltage.midi, val);
 
     return val;
 }
@@ -225,7 +219,7 @@ void loop() {
 
   now = millis();
   // usb_serial.println("Serial LOUD Noise !");
-  // Serial.println("Hello World");
+  // usb_serial.println("Hello World");
 
   button_check(red_button);
   button_check(green_button);
@@ -250,11 +244,11 @@ void loop() {
   }
 
   if(SERIAL_OUT == true){
-    Serial.println("Serial Noise !");
+    usb_serial.println("Serial Noise !");
   }
 
   if(JABBER == true){
-    MIDI.sendControlChange(13, 110, 68);
+    usb_midi.sendControlChange(13, 110, 68);
   }
   if(led_test == true){
     int i;
