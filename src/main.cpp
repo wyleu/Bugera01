@@ -2,6 +2,10 @@
 #include <USBComposite.h>
 #include "ws2812.h"
 
+
+// https://github.com/rogerclarkmelbourne/Arduino_STM32/blob/master/STM32F1/libraries/USBComposite/USBMIDI.h#L159
+
+
 USBMIDI usb_midi;
 USBCompositeSerial usb_serial;
 
