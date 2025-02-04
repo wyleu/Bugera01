@@ -24,7 +24,8 @@ USBCompositeSerial usb_serial;
 
 
 #define MODE_PC true                  // Mode state for Program Change
-#define MODE_NO false                 // Mode state for Note on/off Pentatonic scale. 
+#define MODE_NO true                  // Mode state for Note on/off Pentatonic scale.
+#define MODE_NO_BASE      24          // Base Note for Note mode
 #define MODE_CC false                 // Mode state for Control Change 
 
 #define VOLTS_PSU_MEASURE  false      // Measure PSU Voltage
@@ -228,7 +229,7 @@ bool button_on(Button &button){
                 usb_serial.print(button.midi_pc); }
           } 
           if(MODE_NO ==true){
-            usb_midi.sendNoteOn(button.channel, button.midi_pc, 100);
+            usb_midi.sendNoteOn(button.channel, button.midi_pc + MODE_NO_BASE, 100);
             if(PRINT==true){
                 usb_serial.print(button.alt_colour); }
           }
@@ -243,9 +244,12 @@ bool button_on(Button &button){
 }
 
 bool button_off(Button &button){
-          if(MODE_CC ==true){usb_midi.sendControlChange(button.channel, button.midi_cv, 0);} 
+          if(MODE_CC ==true)
+                {usb_midi.sendControlChange(button.channel, button.midi_cv, 0);} 
           // if(MODE_PC ==true){usb_midi.sendProgramChange(button.channel, button.midi_pc);}
-          if(MODE_PC ==true){usb_midi.sendNoteOff(button.channel, button.midi_pc, 100);}
+          if(MODE_NO ==true)
+                {usb_midi.sendNoteOff(button.channel, button.midi_pc + MODE_NO_BASE, 100);}
+
           usb_midi.sendControlChange(button.channel, button.midi_cv, 0);
           leds_off(button);
           prev_button = button;
