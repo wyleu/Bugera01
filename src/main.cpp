@@ -20,6 +20,12 @@ USBCompositeSerial usb_serial;
 #define JABBER false                  // MIDI Jabber for fault finding
 #define SERIAL_OUT false              // Enable USB Serial out 
 #define LED_TEST true                 // Cycle the LED's on startupi
+#define PRINT true                    // Enable printing
+
+
+#define MODE_PC true                  // Mode state for Program Change
+#define MODE_NO false                 // Mode state for Note on/off Pentatonic scale. 
+#define MODE_CC false                 // Mode state for Control Change 
 
 #define VOLTS_PSU_MEASURE  false      // Measure PSU Voltage
 #define SWITCH_PSU_MEASURE false      // Measure PSU Voltage
@@ -103,7 +109,9 @@ void setup() {
     int pin;                  // pin connected to Button
     uint32_t mode;            // Button Mode
     int channel;              // Midi channel  for button
-    int midi;                 // Midi value sent on press
+    int midi_cv;              // Midi CC value sent on change
+    int midi_pc;              // MIDI PC value sent on change
+    int midi_no;              // MIDI Note Value sent on change
     bool state;               // Button current state
     uint32_t wait;            // Button time pressed
     uint32_t led1;            // LED pos for first led
@@ -116,12 +124,12 @@ void setup() {
 };
 
 
-struct Button red_button = {"Red", "Red", PA9, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 102, false, 0, 0, 1, 2, 3, 255, 0, 0};
-struct Button green_button = {"Green", "Green", PA8, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 103, false, 0, 9, 10, 11, 12, 0, 255, 0};
-struct Button yellow_button = {"Yellow"," Yellow", PB15, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 104, false, 0, 19, 20, 21, 22,  255, 100, 0};
-struct Button blue_button = {"Blue", "Blue", PB14, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 105, false, 0, 29, 30, 31, 32, 0, 0, 255};
-struct Button black_button = {"Black", "Purple", PB13, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 106, false, 0, 39, 40, 41, 42, 255, 0, 255};
-struct Button white_button = {"White", "Grey", PB12, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 107, false, 0, 49, 50, 51, 52, 255, 255, 255};
+struct Button red_button = {"Red", "Red", PA9, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 102, 1, 60, false, 0, 0, 1, 2, 3, 255, 0, 0};
+struct Button green_button = {"Green", "Green", PA8, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 103, 2, 62,  false, 0, 9, 10, 11, 12, 0, 255, 0};
+struct Button yellow_button = {"Yellow"," Yellow", PB15, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 104, 3, 65, false, 0, 19, 20, 21, 22,  255, 100, 0};
+struct Button blue_button = {"Blue", "Blue", PB14, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 105, 4, 67, false, 0, 29, 30, 31, 32, 0, 0, 255};
+struct Button black_button = {"Black", "Purple", PB13, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 106, 5, 69, false, 0, 39, 40, 41, 42, 255, 0, 255};
+struct Button white_button = {"White", "Grey", PB12, MODE_ON_PRESS_OFF, DEFAULT_MIDI_CHANNEL, 107, 6, 72, false, 0, 49, 50, 51, 52, 255, 255, 255};
 
 struct Button prev_button;
 
@@ -130,7 +138,7 @@ struct Voltage {
     char alt_colour[20];
     int pin;                  // pin connected to Voltage   
     int channel;              // MIDI Channel                   
-    int midi;                 // Midi value sent on change
+    int midi_cv;              // Midi CC value sent on change
     int value;                // Current Value
     int last_value;           // The previous value to not transmit unchanged values.
     int threshold;            // Range change required to produce a MIDI CC update
@@ -207,7 +215,27 @@ bool leds_off(Button &button ){
 }
 
 bool button_on(Button &button){
-          usb_midi.sendControlChange(button.channel, button.midi, 127);
+          if(MODE_CC ==true){
+            usb_midi.sendControlChange(button.channel, button.midi_cv, 127);
+            if(PRINT==true){
+                usb_serial.print("CC ");
+                usb_serial.print(button.midi_cv); }
+          } 
+          if(MODE_PC ==true){
+            usb_midi.sendProgramChange(button.channel, button.midi_pc);
+            if(PRINT==true){
+                usb_serial.print("PC ");
+                usb_serial.print(button.midi_pc); }
+          } 
+          if(MODE_NO ==true){
+            usb_midi.sendNoteOn(button.channel, button.midi_pc, 100);
+            if(PRINT==true){
+                usb_serial.print(button.alt_colour); }
+          }
+          if(PRINT==true){
+                usb_serial.println(button.alt_colour);
+          }
+
           led_right_off(prev_button);
 
           leds_on(button);  
@@ -215,7 +243,10 @@ bool button_on(Button &button){
 }
 
 bool button_off(Button &button){
-          usb_midi.sendControlChange(button.channel, button.midi, 0);
+          if(MODE_CC ==true){usb_midi.sendControlChange(button.channel, button.midi_cv, 0);} 
+          // if(MODE_PC ==true){usb_midi.sendProgramChange(button.channel, button.midi_pc);}
+          if(MODE_PC ==true){usb_midi.sendNoteOff(button.channel, button.midi_pc, 100);}
+          usb_midi.sendControlChange(button.channel, button.midi_cv, 0);
           leds_off(button);
           prev_button = button;
           led_right_on(button);
@@ -247,7 +278,11 @@ bool button_check(Button &button){
 
 bool voltage_change(Voltage &voltage){
       int val = map(voltage.value, 0, 4096, 0, 127);
-      usb_midi.sendControlChange(voltage.channel, voltage.midi, val);
+      usb_midi.sendControlChange(voltage.channel, voltage.midi_cv, val);
+      usb_serial.print("-");
+      usb_serial.print(voltage.value);
+      usb_serial.print("------");
+      usb_serial.println(val);
   return true;
 }
 
@@ -255,8 +290,11 @@ int voltage_check(Voltage &voltage){
 
     voltage.value = analogRead(voltage.pin);
     if ((voltage.value > voltage.last_value + voltage.threshold) or (voltage.value < voltage.last_value - voltage.threshold)){
+         usb_serial.print("Change ");
+         usb_serial.print(voltage.colour);
         voltage_change(voltage);
         voltage.last_value = voltage.value;
+ 
     }
 
     return voltage.value;
