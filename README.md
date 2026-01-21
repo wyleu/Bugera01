@@ -6,6 +6,9 @@ Front screws at 70mm distances 5mm * 5mm
 
 Switching to USB programming using.USB Maple Bootloader (DFU).
 
+![bugera_pedalboard](https://github.com/user-attachments/assets/f450bcd7-009f-4ae9-913d-5a4617cb2336)
+
+
 |ST-Link|pins|Name|Ribbon|6 pin connector|
 |---|---|---|---|---|
 |1|-|RST|Brown|-|---|                 
